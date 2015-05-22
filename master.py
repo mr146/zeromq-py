@@ -1,11 +1,15 @@
 #!/usr/bin/env python
 from BaseHTTPServer import BaseHTTPRequestHandler,HTTPServer
 import os
+import zmq
 
 def getFile(filename):
-    if os.path.isfile(filename):
-        return {'result' : 'success', 'file' : open(filename).read()}
-    return {'result' : 'fail', 'reason' : '{0} is not a file or doesn\'t exist'.format(filename)}
+    context = zmq.Context()
+    socket = context.socket(zmq.REQ)
+    socket.connect("tcp://localhost:2222")
+    socket.send(filename)
+    response = socket.recv_json()
+    return response
 
 class HttpProcessor(BaseHTTPRequestHandler):
     def do_GET(self):
